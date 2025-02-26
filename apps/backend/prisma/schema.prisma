@@ -7,119 +7,203 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model failed_login_attempts {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String?   @db.Uuid
-  phone        String    @db.VarChar(15)
-  attempts     Int       @default(1)
-  last_attempt DateTime  @default(now()) @db.Timestamp(6)
-  locked_until DateTime? @db.Timestamp(6)
-  users        users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "failed_login_attempts_user_id_users_id_fk")
-
-  @@index([phone])
-  @@index([user_id])
+model User {
+  id            String         @id @default(cuid())
+  phone         String         @unique
+  email         String?        @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?      // Soft delete
+  roles         Role[]         @relation("UserRoles")
+  addresses     Address[]
+  refreshTokens RefreshToken[]
+  otpHistory    OtpHistory[]
+  orders        Order[]
+  cart          CartItem[]
+  Payment Payment[]
 }
 
-model otp {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?  @db.Uuid
-  phone      String   @db.VarChar(15)
-  code_hash  String   @db.VarChar(256)
-  purpose    String   @db.VarChar(20)
-  channel    String   @db.VarChar(10)
-  expires_at DateTime @db.Timestamp(6)
-  used       Boolean  @default(false)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "otp_user_id_users_id_fk")
-
-  @@index([expires_at])
-  @@index([phone])
-  @@index([user_id])
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  street    String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  isPrimary Boolean  @default(false) // To mark the primary address
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
 }
 
-model refresh_tokens {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id String   @db.Uuid
-  token      String
-  expires_at DateTime @db.Timestamp(6)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  sessions   sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "refresh_tokens_session_id_sessions_id_fk")
-
-  @@index([session_id])
-  @@index([token])
+model OtpHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otp       String   // Store hashed OTP only
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
-model sessions {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id        String           @db.Uuid
-  device_id      String?          @db.VarChar(255)
-  device_info    String?
-  ip_address     String?          @db.VarChar(45)
-  status         String           @default("active") @db.VarChar(10)
-  created_at     DateTime         @default(now()) @db.Timestamp(6)
-  last_used      DateTime         @default(now()) @db.Timestamp(6)
-  refresh_tokens refresh_tokens[]
-  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_id_users_id_fk")
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // Store hashed token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
 
-  @@index([device_id])
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  permissions Permission[] @relation("RolePermissions")
+  users       User[]       @relation("UserRoles")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  roles       Role[]   @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  salePrice   Float?
+  imageUrl    String?
+  stock       Int        @default(0)
+  isActive    Boolean    @default(true)
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  imageUrl  String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items           OrderItem[]
+  totalAmount     Decimal    @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  deliveryAddress String
+  deliveryPersonId String?
+  notes           String?
+  expectedDeliveryAt DateTime
+  actualDeliveryAt DateTime?
+  customerRating Int? @db.SmallInt
+  customerFeedback String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?   // Soft delete
+  Payment Payment[]
+  OrderHistory OrderHistory[]
+
+
+  @@index([userId])
   @@index([status])
-  @@index([user_id])
+  @@index([deliveryPersonId])
+  @@index([createdAt])
 }
 
-model user_addresses {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id       String   @db.Uuid
-  address_line1 String
-  address_line2 String?
-  landmark      String?  @db.VarChar(100)
-  city          String   @db.VarChar(50)
-  state         String   @db.VarChar(50)
-  pincode       String   @db.VarChar(10)
-  coordinates   Json?
-  is_primary    Boolean  @default(false)
-  created_at    DateTime @default(now()) @db.Timestamp(6)
-  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_addresses_user_id_users_id_fk")
-
-  @@index([city])
-  @@index([state])
-  @@index([user_id])
+model OrderHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus // Track status changes
+  notes    String?
+  changedBy String?
+  changedAt DateTime    @default(now())
 }
 
-model user_security {
-  user_id        String  @id @db.Uuid
-  tfa_enabled    Boolean @default(false)
-  tfa_secret     String? @db.VarChar(64)
-  recovery_codes Json?
-  email_verified Boolean @default(false)
-  phone_verified Boolean @default(false)
-  users          users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_security_user_id_users_id_fk")
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model users {
-  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phone                 String                  @unique(map: "users_phone_unique") @db.VarChar(15)
-  email                 String?                 @unique(map: "users_email_unique") @db.VarChar(255)
-  role                  user_role               @default(user)
-  avatar_url            String?
-  created_at            DateTime                @default(now()) @db.Timestamp(6)
-  updated_at            DateTime                @default(now()) @db.Timestamp(6)
-  last_login            DateTime?               @db.Timestamp(6)
-  is_verified           Boolean?                @default(false)
-  active                Boolean?                @default(true)
-  jwt_version           Int                     @default(0)
-  failed_login_attempts failed_login_attempts[]
-  otp                   otp[]
-  sessions              sessions[]
-  user_addresses        user_addresses[]
-  user_security         user_security?
+model Payment {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  orderId      String?
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  method       String        // e.g., "Credit Card", "UPI", "Cash on Delivery"
+  transactionId String?      // Store payment gateway transaction ID
+  status       PaymentStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  @@index([email])
-  @@index([phone])
-  @@index([role])
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
 }
 
-enum user_role {
-  user
-  admin
-  vendor
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RefundStatus {
+  NOT_APPLICABLE
+  PENDING
+  APPROVED
+  PROCESSED
+  REJECTED
 }

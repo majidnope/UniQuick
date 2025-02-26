@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RequestOtpDto } from './dto/request-otp.dto';
 import { TwilioService } from 'nestjs-twilio';
 
 @Injectable()
-export class AuthService {
+export class SmsService {
   constructor(
     private configService: ConfigService,
     private readonly twilioService: TwilioService,
@@ -23,10 +22,5 @@ export class AuthService {
       from: this.configService.get('TWILIO_PHONE_NUMBER'),
       to: phoneNumber,
     });
-  }
-
-  async login(requestOtpDto: RequestOtpDto) {
-    const otp = '259994';
-    await this.sendSms(requestOtpDto.phoneNumber, otp);
   }
 }
