@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model failed_login_attempts {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String?   @db.Uuid
+  phone        String    @db.VarChar(15)
+  attempts     Int       @default(1)
+  last_attempt DateTime  @default(now()) @db.Timestamp(6)
+  locked_until DateTime? @db.Timestamp(6)
+  users        users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "failed_login_attempts_user_id_users_id_fk")
+
+  @@index([phone])
+  @@index([user_id])
+}
+
+model otp {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?  @db.Uuid
+  phone      String   @db.VarChar(15)
+  code_hash  String   @db.VarChar(256)
+  purpose    String   @db.VarChar(20)
+  channel    String   @db.VarChar(10)
+  expires_at DateTime @db.Timestamp(6)
+  used       Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "otp_user_id_users_id_fk")
+
+  @@index([expires_at])
+  @@index([phone])
+  @@index([user_id])
+}
+
+model refresh_tokens {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id String   @db.Uuid
+  token      String
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  sessions   sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "refresh_tokens_session_id_sessions_id_fk")
+
+  @@index([session_id])
+  @@index([token])
+}
+
+model sessions {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String           @db.Uuid
+  device_id      String?          @db.VarChar(255)
+  device_info    String?
+  ip_address     String?          @db.VarChar(45)
+  status         String           @default("active") @db.VarChar(10)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  last_used      DateTime         @default(now()) @db.Timestamp(6)
+  refresh_tokens refresh_tokens[]
+  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sessions_user_id_users_id_fk")
+
+  @@index([device_id])
+  @@index([status])
+  @@index([user_id])
+}
+
+model user_addresses {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String   @db.Uuid
+  address_line1 String
+  address_line2 String?
+  landmark      String?  @db.VarChar(100)
+  city          String   @db.VarChar(50)
+  state         String   @db.VarChar(50)
+  pincode       String   @db.VarChar(10)
+  coordinates   Json?
+  is_primary    Boolean  @default(false)
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_addresses_user_id_users_id_fk")
+
+  @@index([city])
+  @@index([state])
+  @@index([user_id])
+}
+
+model user_security {
+  user_id        String  @id @db.Uuid
+  tfa_enabled    Boolean @default(false)
+  tfa_secret     String? @db.VarChar(64)
+  recovery_codes Json?
+  email_verified Boolean @default(false)
+  phone_verified Boolean @default(false)
+  users          users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_security_user_id_users_id_fk")
+}
+
+model users {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone                 String                  @unique(map: "users_phone_unique") @db.VarChar(15)
+  email                 String?                 @unique(map: "users_email_unique") @db.VarChar(255)
+  role                  user_role               @default(user)
+  avatar_url            String?
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @db.Timestamp(6)
+  last_login            DateTime?               @db.Timestamp(6)
+  is_verified           Boolean?                @default(false)
+  active                Boolean?                @default(true)
+  jwt_version           Int                     @default(0)
+  failed_login_attempts failed_login_attempts[]
+  otp                   otp[]
+  sessions              sessions[]
+  user_addresses        user_addresses[]
+  user_security         user_security?
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+enum user_role {
+  user
+  admin
+  vendor
+}
