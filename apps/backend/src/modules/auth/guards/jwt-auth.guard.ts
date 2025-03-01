@@ -20,4 +20,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
     return user;
   }
+
+  // This method is called by NestJS when the user is authenticated
 }
