@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   FaArrowRight,
@@ -17,9 +17,10 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { section, div } from "framer-motion/client";
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState(0);
+  //const [activeCategory, setActiveCategory] = useState(0);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -223,7 +224,7 @@ export default function HomePage() {
                 <Link
                   href={`/categories/${category.name.toLowerCase().replace(/\s+&\s+/g, "-")}`}
                   className="group bg-white dark:bg-zinc-800/50 rounded-xl overflow-hidden aspect-square relative border border-zinc-100 dark:border-zinc-800 hover:border-orange-400/30 dark:hover:border-orange-400/30 transition-all hover:shadow-lg hover:shadow-orange-500/10 flex flex-col"
-                  onMouseEnter={() => setActiveCategory(index)}
+                  /* onMouseEnter={() => setActiveCategory(index)} */
                 >
                   {/* Card Background */}
                   <div
