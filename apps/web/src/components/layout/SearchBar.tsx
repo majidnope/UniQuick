@@ -1,15 +1,20 @@
 import { BiSearch } from "react-icons/bi";
 import { useState, useEffect, useRef } from "react";
 
-const SearchBar = ({ isSearchOpen, setIsSearchOpen }) => {
-  const [suggestions, setSuggestions] = useState([]);
-  const searchBarRef = useRef(null);
+interface SearchBarProps {
+  isSearchOpen: boolean;
+  setIsSearchOpen: (isOpen: boolean) => void;
+}
+
+const SearchBar = ({ isSearchOpen, setIsSearchOpen }: SearchBarProps) => {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         searchBarRef.current &&
-        !searchBarRef.current.contains(event.target)
+        !searchBarRef.current.contains(event.target as Node)
       ) {
         setIsSearchOpen(false);
       }
@@ -21,7 +26,7 @@ const SearchBar = ({ isSearchOpen, setIsSearchOpen }) => {
     };
   }, [setIsSearchOpen]);
 
-  const handleInputChange = (event) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
 
     if (query.trim() === "") {

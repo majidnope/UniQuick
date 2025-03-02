@@ -7,7 +7,7 @@ import SearchBar from "./SearchBar";
 import ActionButtons from "./ActionButtons";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   return (
