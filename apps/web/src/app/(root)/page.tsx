@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   FaArrowRight,
   FaHeart,
-  FaHome,
   FaMobileAlt,
   FaRunning,
   FaSprayCan,
