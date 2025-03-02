@@ -2,7 +2,12 @@ import Link from "next/link";
 import { BiSearch } from "react-icons/bi";
 import { FiHeart, FiShoppingCart, FiX } from "react-icons/fi";
 
-const ActionButtons = ({ isSearchOpen, setIsSearchOpen }) => {
+interface ActionButtonsProps {
+  isSearchOpen: boolean;
+  setIsSearchOpen: (isOpen: boolean) => void;
+}
+
+const ActionButtons = ({ isSearchOpen, setIsSearchOpen }: ActionButtonsProps) => {
   return (
     <div className="flex items-center gap-3">
       <button

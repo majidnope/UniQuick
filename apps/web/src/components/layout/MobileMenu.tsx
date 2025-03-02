@@ -9,7 +9,12 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 
-const MobileMenu = ({ isMenuOpen, setIsMenuOpen }) => {
+interface MobileMenuProps {
+  isMenuOpen: boolean;
+  setIsMenuOpen: (isOpen: boolean) => void;
+}
+
+const MobileMenu = ({ isMenuOpen, setIsMenuOpen }: MobileMenuProps) => {
   return (
     <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <SheetTrigger asChild>
