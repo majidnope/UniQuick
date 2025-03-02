@@ -8,7 +8,7 @@ import ActionButtons from "./ActionButtons";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm dark:bg-zinc-950/95 border-b border-zinc-100 dark:border-zinc-800 py-4 px-6 md:px-16">
