@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import MobileMenu from "./MobileMenu";
 import Logo from "./Logo";
 import SearchBar from "./SearchBar";

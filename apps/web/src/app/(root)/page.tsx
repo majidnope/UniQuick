@@ -17,7 +17,6 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { section, div } from "framer-motion/client";
 
 export default function HomePage() {
   //const [activeCategory, setActiveCategory] = useState(0);
