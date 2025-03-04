@@ -15,7 +15,7 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?      // Soft delete
-  roles         Role[]         @relation("UserRoles")
+  roles         UserRole[]
   addresses     Address[]
   refreshTokens RefreshToken[]
   otpHistory    OtpHistory[]
@@ -58,7 +58,7 @@ model RefreshToken {
   createdAt DateTime @default(now())
 }
 
-model Role {
+/*model Role {
   id          String       @id @default(cuid())
   name        String       @unique
   description String?
@@ -75,7 +75,7 @@ model Permission {
   roles       Role[]   @relation("RolePermissions")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
+}*/
 
 model Product {
   id          String     @id @default(cuid())
@@ -206,4 +206,11 @@ enum RefundStatus {
   APPROVED
   PROCESSED
   REJECTED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  DELIVERY_PERSON
+  VENDOR
 }
