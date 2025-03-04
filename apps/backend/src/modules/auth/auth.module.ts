@@ -3,7 +3,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TwilioModule } from 'nestjs-twilio';
-import { DatabaseModule } from '../database/database.module';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -15,9 +16,8 @@ import { DatabaseModule } from '../database/database.module';
       }),
       inject: [ConfigService],
     }),
-    DatabaseModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService,PrismaService,JwtService],
 })
 export class AuthModule {}

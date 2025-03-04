@@ -6,14 +6,15 @@ import otpGenerator from 'utils/otpGenerator';
 import bcrypt from 'bcrypt';
 import { OTPPurpose } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+;
 
 @Injectable()
 export class AuthService {
   constructor(
     private configService: ConfigService,
     private readonly twilioService: TwilioService,
-    private prisma: PrismaService,
-  ) {}
+    private prisma: PrismaService
+  ) { }
 
   async sendSms(phone: string): Promise<any> {
     // In production, integrate with a real SMS provider like Twilio, MessageBird, etc.
@@ -22,6 +23,7 @@ export class AuthService {
       console.log(`SMS to ${phoneNumber}: ${message}`);
       return true;
     }*/
+
     const otp = await otpGenerator(6);
     await this.twilioService.client.messages.create({
       body: `Your OTP for UniQuick is ${otp}`,
