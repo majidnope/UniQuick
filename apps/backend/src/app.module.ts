@@ -4,6 +4,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TwilioModule } from 'nestjs-twilio';
+import { DatabaseModule } from './modules/database/database.module';
 import configurations from './config/configurations';
 
 @Module({
@@ -12,6 +13,7 @@ import configurations from './config/configurations';
       isGlobal: true,
       load: [configurations],
     }),
+    PrismaService,
     TwilioModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -22,6 +24,7 @@ import configurations from './config/configurations';
     }),
     AuthModule,
     UserModule,
+    DatabaseModule,
   ],
   controllers: [],
   providers: [PrismaService, ConfigService],

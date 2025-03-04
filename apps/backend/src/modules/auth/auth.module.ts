@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TwilioModule } from 'nestjs-twilio';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TwilioModule } from 'nestjs-twilio';
       }),
       inject: [ConfigService],
     }),
+    DatabaseModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

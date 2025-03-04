@@ -18,7 +18,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:migrate": "npx prisma migrate"
+    "prisma:migrate": "npx prisma migrate",
+    "prisma:linux": "bash ./scripts/prisma.sh dev",
+    "prisma:win": ".\\scripts\\prisma.bat dev",
+    "prisma:show:win": ".\\scripts\\show-prisma.bat dev"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

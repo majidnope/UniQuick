@@ -7,6 +7,12 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED');
 -- CreateEnum
 CREATE TYPE "RefundStatus" AS ENUM ('NOT_APPLICABLE', 'PENDING', 'APPROVED', 'PROCESSED', 'REJECTED');
 
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN', 'DELIVERY_PERSON', 'VENDOR');
+
+-- CreateEnum
+CREATE TYPE "OTPPurpose" AS ENUM ('REGISTRATION', 'LOGIN', 'PASSWORD_RESET');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -16,6 +22,7 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
+    "roles" "UserRole"[],
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -58,28 +65,6 @@ CREATE TABLE "RefreshToken" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Role" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Permission" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -182,19 +167,19 @@ CREATE TABLE "Payment" (
 );
 
 -- CreateTable
-CREATE TABLE "_UserRoles" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL,
+CREATE TABLE "OTP" (
+    "id" TEXT NOT NULL,
+    "phone" TEXT,
+    "email" TEXT,
+    "code" TEXT NOT NULL,
+    "purpose" "OTPPurpose" NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "_UserRoles_AB_pkey" PRIMARY KEY ("A","B")
-);
-
--- CreateTable
-CREATE TABLE "_RolePermissions" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL,
-
-    CONSTRAINT "_RolePermissions_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "OTP_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -205,12 +190,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
@@ -240,10 +219,16 @@ CREATE INDEX "Payment_orderId_idx" ON "Payment"("orderId");
 CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 
 -- CreateIndex
-CREATE INDEX "_UserRoles_B_index" ON "_UserRoles"("B");
+CREATE INDEX "OTP_phone_idx" ON "OTP"("phone");
 
 -- CreateIndex
-CREATE INDEX "_RolePermissions_B_index" ON "_RolePermissions"("B");
+CREATE INDEX "OTP_email_idx" ON "OTP"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OTP_phone_purpose_key" ON "OTP"("phone", "purpose");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OTP_email_purpose_key" ON "OTP"("email", "purpose");
 
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -280,15 +265,3 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_UserRoles" ADD CONSTRAINT "_UserRoles_A_fkey" FOREIGN KEY ("A") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_UserRoles" ADD CONSTRAINT "_UserRoles_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_RolePermissions" ADD CONSTRAINT "_RolePermissions_A_fkey" FOREIGN KEY ("A") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_RolePermissions" ADD CONSTRAINT "_RolePermissions_B_fkey" FOREIGN KEY ("B") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
