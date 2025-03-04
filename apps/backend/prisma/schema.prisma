@@ -214,3 +214,32 @@ enum UserRole {
   DELIVERY_PERSON
   VENDOR
 }
+
+
+
+
+// OTP Model
+
+model OTP {
+  id        String   @id @default(cuid())
+  phone     String?
+  email     String?
+  code      String
+  purpose   OTPPurpose
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([phone, purpose])
+  @@unique([email, purpose])
+  @@index([phone])
+  @@index([email])
+}
+
+enum OTPPurpose {
+  REGISTRATION
+  LOGIN
+  PASSWORD_RESET
+}
